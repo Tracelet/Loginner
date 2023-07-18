@@ -36,7 +36,7 @@ class Loginner:
                 driver.get(self.url)
             except WebDriverException as e:
                 if i == 4:
-                    raise WebDriverException(e.msg)
+                    raise WebDriverException(e.msg) # заменить raise, чтобы не останавливать парсер
                 time.sleep(1)
             else:
                 return True
