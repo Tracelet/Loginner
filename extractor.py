@@ -43,7 +43,6 @@ class Extractor (Loginner):
                                              "table-headings mar-t-15").find("thead")
         th_list = title_table.findAll('th')
 
-        # check sale price
         titles: list = []
         for th in th_list:
             titles.append(th.text)
