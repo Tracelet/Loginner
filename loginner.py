@@ -3,6 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException, NoSuchElementException
+import abc
 
 driver = webdriver.Chrome()
 sanmar_url = "https://sanmar.com/login"
@@ -13,6 +14,7 @@ def check_element(by: str, element: str):
 
     for i in range(10):
         try:
+            print(driver.current_url)
             driver.find_element(by, element)
         except NoSuchElementException as e:
             print(f"Try to found element \"{element}\" by {by}...       {i + 1}/ 10")
@@ -42,6 +44,8 @@ class Loginner:
                 return True
 
     def sanmar(self):
+        self.url = sanmar_url
+        self.check_connection()
         check_element(By.ID, 'j_username')
         check_element(By.ID, 'j_password')
         username = driver.find_element(By.ID, 'j_username')
@@ -52,6 +56,8 @@ class Loginner:
 
 
     def ssactivewear(self):
+        self.url = sswear_url
+        self.check_connection()
         check_element(By.ID, 'M_M_zEmailTB')
         check_element(By.ID, 'M_M_zPasswordTB')
         email = driver.find_element(By.ID, 'M_M_zEmailTB')
@@ -61,6 +67,8 @@ class Loginner:
         password.send_keys(Keys.ENTER)
 
     def alphabroder(self):
+        self.url = alpha_url
+        self.check_connection()
         check_element(By.ID, 'username')
         check_element(By.ID, 'password')
         username = driver.find_element(By.ID, 'username')

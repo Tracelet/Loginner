@@ -1,12 +1,7 @@
 import time
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException, NoSuchElementException
-from loginner import Loginner, check_element
-from bs4 import BeautifulSoup as bs
-import requests
-
-driver = webdriver.Chrome()
+from loginner import Loginner, check_element, driver # запихнуть переменные внутрь класса
 
 
 class Extractor (Loginner):
@@ -15,6 +10,7 @@ class Extractor (Loginner):
 
         self.url = url
         self.check_connection()  # какую из переменных driver он изменит?
+        time.sleep(3)
 
         try:
             text = driver.find_element(By.CLASS_NAME, 'title_holder').text.strip()
@@ -30,46 +26,38 @@ class Extractor (Loginner):
 
     def __click_first_item(self):
         check_element(By.CLASS_NAME, "product-image")
-        driver.find_element(By.CLASS_NAME, "product-image").find_element(By.TAG_NAME, 'a').click()
+        driver.find_element(By.CLASS_NAME, "product-image").click()
 
     def __big_button_click(self):
         check_element(By.LINK_TEXT, "Check Inventory and Pricing")
         driver.find_element(By.LINK_TEXT, "Check Inventory and Pricing").click()
 
-    def __get_col(self) -> int:
-        page = requests.get(driver.current_url)
-        soup = bs(page.text, "html.parser")
-        title_table = soup.find('table', class_="table-inventory-next table-inventory-root table-pricing "
-                                             "table-headings mar-t-15").find("thead")
-        th_list = title_table.findAll('th')
-
-        # check sale price
-        titles: list = []
-        for th in th_list:
-            titles.append(th.text)
-        # исхожу из того, что размер L всегда есть
-        return titles.index("L")
-
-    def __get_data(self, index) -> str:
+    def __get_cell_indexes(self):
         sale = "Sale Price: $"
 
-        page = requests.get(driver.current_url)
-        soup = bs(page.text, "html.parser")
-        title_table = soup.find('table', class_="table-inventory-next table-inventory-root table-pricing "
-                                                "table-headings mar-t-15").find("tbody")
-        tr_list = title_table.findAll('tr', limit=5)
+        th = driver.find_elements(By.XPATH, "//table[@id='table-inventory-1']/thead/tr/th[position() > 1]")
+        head_list: list = []
+        for item in th:
+            head_list.append(item.text)
 
+        col_index = head_list.index("L")
+
+        td = driver.find_elements(By.XPATH, "//form[@name='warehouseHouseGridForm']/table/tbody/tr/td[position() < 6]")
         row_list: list = []
-        for tr in tr_list:
-            row_list.append(tr.get_text(' ', True))  # должен быть список списков
+        for item in td:
+            row_list.append(item.text)
 
-        tlist: list = []
-        for item in row_list:
-            tlist.append(item[0])
-        if sale in tlist:
-            return row_list[tlist.index(sale)][index + 1]
+        row_index = 0
+        if sale in row_list:
+            row_index = row_list.index(sale)
 
-        return row_list[0][index + 1]
+        return row_index, col_index
+
+
+    def __get_data(self, row_index, col_index) -> str:
+
+        cost = driver.find_element(By.XPATH, f"//table[@id='table-inventory-1']/tbody/tr[{row_index + 1}]/td[{col_index + 2}]")
+        return cost.text
 
     def extract(self, request_url) -> str:
 
@@ -77,6 +65,16 @@ class Extractor (Loginner):
             return "0"
 
         self.__click_first_item()
+        time.sleep(1)
         self.__big_button_click()
-        index = self.__get_col()
-        return self.__get_data(index)
+        time.sleep(1)
+        index1, index2 = self.__get_cell_indexes()
+        return self.__get_data(index1, index2)
+
+
+sanmar = Extractor(username="dlhscreenprint", password="Lafd135!", url=None)
+sanmar.sanmar()
+time.sleep(3)
+cost = sanmar.extract("https://sanmar.com/search/?text=3001")
+print(cost)
+assert cost == "3.89"
