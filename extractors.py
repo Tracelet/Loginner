@@ -82,7 +82,7 @@ class AlphaExtractor(AlphaLoginner):
     pass
 
 
-sanmar = SanmarExtractor(username="dlhscreenprint", password="Lafd135!")
+sanmar = SanmarExtractor(username="", password="")
 sanmar.login()
 time.sleep(3)
 cost = sanmar.extract("https://sanmar.com/search/?text=3001")
