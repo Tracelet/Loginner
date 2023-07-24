@@ -1,10 +1,10 @@
 import time
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import WebDriverException, NoSuchElementException
-from loginner import Loginner, check_element, driver # запихнуть переменные внутрь класса
+from selenium.common.exceptions import NoSuchElementException
+from loginners import SanmarLoginner, SswearLoginner, AlphaLoginner
 
 
-class Extractor (Loginner):
+class SanmarExtractor (SanmarLoginner):
 
     def __no_results(self, url: str) -> bool: # сделать через try catch
 
@@ -13,7 +13,7 @@ class Extractor (Loginner):
         time.sleep(3)
 
         try:
-            text = driver.find_element(By.CLASS_NAME, 'title_holder').text.strip()
+            text = self.driver.find_element(By.CLASS_NAME, 'title_holder').text.strip()
         except NoSuchElementException as e:
             print(e.msg) #?
             return False
@@ -25,24 +25,26 @@ class Extractor (Loginner):
         return False
 
     def __click_first_item(self):
-        check_element(By.CLASS_NAME, "product-image")
-        driver.find_element(By.CLASS_NAME, "product-image").click()
+        self.check_element(By.CLASS_NAME, "product-image")
+        self.driver.find_element(By.CLASS_NAME, "product-image").click()
 
     def __big_button_click(self):
-        check_element(By.LINK_TEXT, "Check Inventory and Pricing")
-        driver.find_element(By.LINK_TEXT, "Check Inventory and Pricing").click()
+        self.check_element(By.LINK_TEXT, "Check Inventory and Pricing")
+        self.driver.find_element(By.LINK_TEXT, "Check Inventory and Pricing").click()
 
     def __get_cell_indexes(self):
         sale = "Sale Price: $"
 
-        th = driver.find_elements(By.XPATH, "//table[@id='table-inventory-1']/thead/tr/th[position() > 1]")
+        th = self.driver.find_elements(By.XPATH, "//table[@id='table-inventory-1']"
+                                                 "/thead/tr/th[position() > 1]")
         head_list: list = []
         for item in th:
             head_list.append(item.text)
 
         col_index = head_list.index("L")
 
-        td = driver.find_elements(By.XPATH, "//form[@name='warehouseHouseGridForm']/table/tbody/tr/td[position() < 6]")
+        td = self.driver.find_elements(By.XPATH, "//form[@name='warehouseHouseGridForm']"
+                                                 "/table/tbody/tr/td[position() < 6]")
         row_list: list = []
         for item in td:
             row_list.append(item.text)
@@ -53,10 +55,10 @@ class Extractor (Loginner):
 
         return row_index, col_index
 
-
     def __get_data(self, row_index, col_index) -> str:
 
-        cost = driver.find_element(By.XPATH, f"//table[@id='table-inventory-1']/tbody/tr[{row_index + 1}]/td[{col_index + 2}]")
+        cost = self.driver.find_element(By.XPATH, f"//table[@id='table-inventory-1']"
+                                                  f"/tbody/tr[{row_index + 1}]/td[{col_index + 2}]")
         return cost.text
 
     def extract(self, request_url) -> str:
@@ -72,8 +74,16 @@ class Extractor (Loginner):
         return self.__get_data(index1, index2)
 
 
-sanmar = Extractor(username="dlhscreenprint", password="Lafd135!", url=None)
-sanmar.sanmar()
+class SswearExtractor(SswearLoginner):
+    pass
+
+
+class AlphaExtractor(AlphaLoginner):
+    pass
+
+
+sanmar = SanmarExtractor(username="dlhscreenprint", password="Lafd135!")
+sanmar.login()
 time.sleep(3)
 cost = sanmar.extract("https://sanmar.com/search/?text=3001")
 print(cost)
